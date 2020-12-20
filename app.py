@@ -1,6 +1,9 @@
-from flask import Flask
+import typing
+from dataclasses import dataclass
+from flask import Flask, jsonify, request
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
+from flask_restful import Resource, Api
 
 app = Flask(__name__)
 
@@ -8,6 +11,7 @@ app.config.from_object('config')
 app.secret_key = '1E798070A145499E6F1649837221BFC3'
 db = SQLAlchemy(app)
 migrate = Migrate(app, db)
+api = Api(app)
 
 
 class Company(db.Model):
