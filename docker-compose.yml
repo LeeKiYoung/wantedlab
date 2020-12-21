@@ -1,0 +1,46 @@
+version: '3'
+
+services:
+  nginx:
+    image: nginx:1.14.2
+    ports:
+      - "80:80"
+    volumes:
+      - ./config/nginx:/etc/nginx/conf.d
+    depends_on:
+      - flask
+
+  mysql_db:
+    image: mysql:5.7
+    ports:
+      - "32772:3306"
+    restart: always
+    environment:
+      MYSQL_DATABASE: wantedlab
+      MYSQL_ROOT_PASSWORD: wantedlab!@
+      MYSQL_USER: user
+      MYSQL_PASSWORD: wantedlab!@
+    command: ['--character-set-server=utf8mb4', '--collation-server=utf8mb4_unicode_ci']
+
+  flask:
+    build:
+      context: .
+      dockerfile: ./Dockerfile
+    environment:
+      DB_NAME: wantedlab
+      DB_USERNAME: user
+      DB_PASSWORD: wantedlab!@
+      DB_HOST: mysql_db
+      DB_PORT: 3306
+    command:
+      - bash
+      - -c
+      - |
+        /wait-for-it.sh mysql_db:3306 -t 10
+        /bin/sleep 5
+        flask db upgrade
+        uwsgi --ini ./config/uwsgi/wanted.ini
+    volumes:
+      - ./:/app/
+    depends_on:
+      - mysql_db
