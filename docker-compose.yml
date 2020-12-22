@@ -7,6 +7,7 @@ services:
       - "80:80"
     volumes:
       - ./config/nginx:/etc/nginx/conf.d
+      - ./static/flask_restful_swagger:/app/static/flask_restful_swagger
     depends_on:
       - flask
 

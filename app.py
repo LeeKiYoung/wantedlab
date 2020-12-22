@@ -3,7 +3,8 @@ from dataclasses import dataclass
 from flask import Flask, jsonify
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
-from flask_restful import Resource, Api, request
+from flask_restful import Resource, Api, request, fields
+from flask_restful_swagger import swagger
 from wtforms import Form, BooleanField, StringField, IntegerField, PasswordField, validators
 
 app = Flask(__name__)
@@ -12,8 +13,15 @@ app.config.from_object('config')
 app.secret_key = '1E798070A145499E6F1649837221BFC3'
 db = SQLAlchemy(app)
 migrate = Migrate(app, db)
-api = Api(app)
-
+api = swagger.docs(
+    Api(app),
+    apiVersion="0.1",
+    basePath="http://localhost",
+    resourcePath="/api/spec/",
+    produces=["application/json"],
+    api_spec_url="/api/spec",
+    description="wanted",
+)
 
 class GetModelError(Exception):
     pass
@@ -54,6 +62,25 @@ class TagForm(Form):
 
 
 class CompanyAutocompleteViewSet(Resource):
+    @swagger.model
+    class autocomplete:
+        def __init__(self, name):
+            pass
+    @swagger.operation(
+        notes="회사명 자동완성",
+        responseClass=autocomplete.__name__,
+        nickname="get",
+        parameters=[
+            {
+                "name": "Accept-Language",
+                "description": "언어 코드 ex) ko",
+                "required": True,
+                "allowMultiple": False,
+                "dataType": "string",
+                "paramType": "header",
+            }
+        ],
+    )
     def get(self, name):
         company_lang = Company.get_company_lang(obj=Company, accept_languages=request.accept_languages)
         if company_lang:
@@ -69,6 +96,29 @@ api.add_resource(CompanyAutocompleteViewSet, '/autocomplete/<string:name>')
 
 
 class CompanyListTagViewSet(Resource):
+    @swagger.model
+    class tag_list:
+        resource_fields = {
+            "company_name_ja": fields.String(),
+            "company_name_en": fields.String(),
+            "company_name_ko": fields.String(),
+            "id": fields.Integer(),
+        }
+    @swagger.operation(
+        notes="태그명으로 회사 검색",
+        responseClass=tag_list.__name__,
+        nickname="get",
+        parameters=[
+            {
+                "name": "Accept-Language",
+                "description": "언어 코드 ex) ko",
+                "required": True,
+                "allowMultiple": False,
+                "dataType": "string",
+                "paramType": "header",
+            }
+        ],
+    )
     def get(self, tag):
         tag_lang = Company.get_tag_lang(obj=Company, accept_languages=request.accept_languages)
         if tag_lang:
@@ -83,6 +133,36 @@ api.add_resource(CompanyListTagViewSet, '/tag/<string:tag>')
 
 
 class CompanyTagViewSet(Resource):
+    @swagger.operation(
+        notes="회사 태그 정보 추가",
+        nickname="post",
+        parameters=[
+            {
+                "name": "company_id",
+                "description": "company id",
+                "required": True,
+                "allowMultiple": False,
+                "dataType": "integer",
+                "paramType": "form",
+            },
+            {
+                "name": "tag",
+                "description": "태그",
+                "required": True,
+                "allowMultiple": False,
+                "dataType": "string",
+                "paramType": "form",
+            },
+            {
+                "name": "Accept-Language",
+                "description": "언어 코드 ex) ko",
+                "required": True,
+                "allowMultiple": False,
+                "dataType": "string",
+                "paramType": "header",
+            }
+        ],
+    )
     def post(self):
         try:
             data: dict = self._is_valid()
@@ -102,6 +182,36 @@ class CompanyTagViewSet(Resource):
         
         return '', 201
         
+    @swagger.operation(
+        notes="회사 태그 정보 삭제",
+        nickname="delete",
+        parameters=[
+            {
+                "name": "company_id",
+                "description": "company id",
+                "required": True,
+                "allowMultiple": False,
+                "dataType": "integer",
+                "paramType": "form",
+            },
+            {
+                "name": "tag",
+                "description": "태그",
+                "required": True,
+                "allowMultiple": False,
+                "dataType": "string",
+                "paramType": "form",
+            },
+            {
+                "name": "Accept-Language",
+                "description": "언어 코드 ex) ko",
+                "required": True,
+                "allowMultiple": False,
+                "dataType": "string",
+                "paramType": "header",
+            }
+        ],
+    )
     def delete(self):
         try:
             data: dict = self._is_valid()
