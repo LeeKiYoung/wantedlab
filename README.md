@@ -16,6 +16,9 @@ csv fixture 가 mysql docker가 구동되면 insert 되므로 서버구동후 5~
 ### api명세
 * http://127.0.0.1/api/spec.html
 
+### test 
+    docker exec -i wantedlab_flask_1 python test.py
+
 ### db 접속정보
 * host : 127.0.0.1
 * port : 32770
