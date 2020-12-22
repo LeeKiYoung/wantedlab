@@ -13,7 +13,7 @@ services:
   mysql_db:
     image: mysql:5.7
     ports:
-      - "32772:3306"
+      - "32770:3306"
     restart: always
     environment:
       MYSQL_DATABASE: wantedlab
@@ -36,8 +36,7 @@ services:
       - bash
       - -c
       - |
-        /wait-for-it.sh mysql_db:3306 -t 10
-        /bin/sleep 5
+        /wait-for-it.sh mysql_db:3306 -t 10 -- /bin/sleep 5
         flask db upgrade
         uwsgi --ini ./config/uwsgi/wanted.ini
     volumes:
